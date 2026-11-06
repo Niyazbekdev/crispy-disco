@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Git va GitHub poygasi</title>
+<style>
+  :root {
+    --bg: #eef2f8;
+    --ink: #14213d;
+    --muted: #5b6475;
+    --card: #ffffff;
+    --line: #d6dce8;
+    --ok: #1f9d55;
+    --bad: #d64545;
+    --accent: #2b6cb0;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--ink);
+    user-select: none; -webkit-user-select: none;
+    touch-action: manipulation; overflow: hidden;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
+  input, textarea, select { font: inherit; color: inherit; user-select: text; -webkit-user-select: text; }
+  .screen { position: fixed; inset: 0; display: none; }
+  .screen.on { display: flex; }
+
+  /* ---------- SETTINGS ---------- */
+  #settings, #admin { align-items: flex-start; justify-content: center; overflow-y: auto; padding: 24px; }
+  .panel { background: var(--card); border-radius: 28px; box-shadow: 0 12px 40px rgba(20,33,61,.12); padding: 36px 44px; width: min(1200px, 100%); }
+  .brand { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 26px; flex-wrap: wrap; }
+  .brand h1 { margin: 0; font-size: 46px; line-height: 1.1; }
+  .brand h1 span { color: var(--accent); }
+  .seg { display: inline-flex; background: #e6ebf3; border-radius: 18px; padding: 6px; gap: 6px; }
+  .seg button { border: none; background: transparent; border-radius: 14px; min-height: 64px; min-width: 120px; padding: 0 22px; font-size: 24px; font-weight: 700; color: var(--muted); }
+  .seg button.sel { background: var(--card); color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 36px; }
+  .field { background: #f6f8fc; border: 2px solid var(--line); border-radius: 22px; padding: 18px 22px; }
+  .field .lbl { font-size: 22px; font-weight: 700; color: var(--muted); margin-bottom: 12px; }
+  .field .hint { font-size: 18px; color: var(--muted); margin-top: 8px; }
+  .stepper { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+  .stepper button { width: 88px; height: 88px; border-radius: 22px; border: none; background: var(--accent); color: #fff; font-size: 48px; font-weight: 700; line-height: 1; }
+  .stepper button:active { transform: scale(.95); }
+  .stepper button:disabled { background: #b8c2d3; }
+  .stepper .val { font-size: 64px; font-weight: 800; min-width: 90px; text-align: center; }
+  .rules { margin: 22px 0 0; padding: 18px 22px; border-radius: 20px; background: #fff8e6; border: 2px solid #f1d58a; font-size: 21px; line-height: 1.5; }
+  .rules b { display: block; margin-bottom: 4px; }
+  .rules ol { margin: 0; padding-left: 26px; }
+  .foot { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 26px; flex-wrap: wrap; }
+  .total { font-size: 24px; color: var(--muted); font-weight: 600; }
+  .big { min-height: 96px; padding: 0 56px; border: none; border-radius: 26px; background: var(--ok); color: #fff; font-size: 34px; font-weight: 800; box-shadow: 0 6px 0 #157a40; }
+  .big:active { transform: translateY(4px); box-shadow: 0 2px 0 #157a40; }
+  .btn3 { min-height: 72px; padding: 0 28px; border-radius: 20px; border: 3px solid var(--line); background: #fff; font-size: 24px; font-weight: 800; }
+  .btn3.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn3.red { background: #fff; border-color: var(--bad); color: var(--bad); }
+  .btn3:active { transform: scale(.97); }
+  .btn3:disabled { opacity: .45; }
+
+  /* o'quvchilar */
+  .students { display: grid; grid-template-columns: 1fr 1.6fr; gap: 22px; }
+  .students textarea { width: 100%; min-height: 300px; resize: vertical; border-radius: 18px; border: 3px solid var(--line); padding: 14px 18px; font-size: 22px; line-height: 1.45; }
+  .students textarea:focus, .tcard input:focus, .ed input:focus, .ed select:focus { outline: none; border-color: var(--accent); }
+  .srow { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+  .scount { font-size: 20px; font-weight: 700; color: var(--muted); }
+  .tcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; align-content: start; }
+  .tcard { border: 3px solid var(--c); border-radius: 18px; overflow: hidden; background: #fff; }
+  .tcard input { width: 100%; min-height: 60px; border: none; border-bottom: 3px solid var(--c); background: color-mix(in srgb, var(--c) 12%, white); padding: 0 14px; font-size: 22px; font-weight: 800; }
+  .tcard .mem { padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 6px; min-height: 52px; }
+  .chip { background: #eef2f8; border-radius: 999px; padding: 4px 12px; font-size: 18px; font-weight: 700; }
+  .tcard .empty { color: var(--muted); font-size: 17px; }
+
+  /* ---------- ADMIN ---------- */
+  .atop { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+  .atop h1 { margin: 0 auto 0 0; font-size: 40px; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .filters button { min-height: 56px; padding: 0 20px; border-radius: 999px; border: 3px solid var(--line); background: #fff; font-size: 20px; font-weight: 800; color: var(--muted); }
+  .filters button.sel { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .qlist { display: flex; flex-direction: column; gap: 10px; }
+  .qitem { display: grid; grid-template-columns: 54px 1fr auto; gap: 14px; align-items: center; border: 2px solid var(--line); border-radius: 18px; padding: 12px 14px; background: #fbfcfe; }
+  .qitem .num { font-size: 22px; font-weight: 800; color: var(--muted); text-align: center; }
+  .qitem .qt { font-size: 22px; font-weight: 700; line-height: 1.3; }
+  .qitem .qs { font-size: 17px; color: var(--muted); margin-top: 4px; }
+  .qitem .tp { display: inline-block; font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; border-radius: 999px; padding: 2px 10px; margin-right: 8px; background: #e6ebf3; color: var(--muted); }
+  .qitem .acts { display: flex; gap: 8px; }
+  .qitem .acts button { min-height: 60px; min-width: 60px; padding: 0 16px; border-radius: 14px; border: 2px solid var(--line); background: #fff; font-size: 20px; font-weight: 800; }
+  .qitem .acts .d { border-color: #f0b0b0; color: var(--bad); }
+  .box.ed { text-align: left; }
+  .ed h2 { text-align: center; }
+  .ed .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ed label.l { display: block; font-size: 19px; font-weight: 800; color: var(--muted); margin: 14px 0 6px; }
+  .ed input[type=text], .ed select { width: 100%; min-height: 60px; border-radius: 14px; border: 3px solid var(--line); padding: 0 14px; font-size: 21px; background: #fff; }
+  .ed .ans { display: grid; grid-template-columns: 70px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .ed .ans.o { grid-template-columns: 50px 1fr 1fr; }
+  .ed .rad { width: 64px; height: 60px; border-radius: 14px; border: 3px solid var(--line); background: #fff; font-size: 28px; font-weight: 900; color: #c2c9d6; }
+  .ed .rad.sel { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .ed .stepn { font-size: 26px; font-weight: 900; text-align: center; color: var(--muted); }
+  .ed .note { font-size: 17px; color: var(--muted); margin-top: 4px; }
+  .ed .err { color: var(--bad); font-size: 21px; font-weight: 800; min-height: 30px; margin: 10px 0; text-align: center; }
+
+  /* ---------- GAME ---------- */
+  #game { flex-direction: column; }
+  .topbar { flex: none; height: 76px; display: flex; align-items: center; gap: 16px; padding: 0 18px; background: var(--ink); color: #fff; }
+  .topbar .t { font-size: 28px; font-weight: 800; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar .clock { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; background: rgba(255,255,255,.12); padding: 4px 18px; border-radius: 14px; }
+  .tb { min-height: 60px; min-width: 60px; padding: 0 18px; border-radius: 16px; border: 2px solid rgba(255,255,255,.35); background: transparent; color: #fff; font-size: 21px; font-weight: 700; }
+  .tb.end { background: var(--bad); border-color: var(--bad); }
+  .lanes { flex: 1; display: grid; gap: 10px; padding: 10px; min-height: 0; }
+  .lane { --c: #2b6cb0; position: relative; display: flex; flex-direction: column; background: var(--card); border-radius: calc(22px * var(--s)); border: calc(5px * var(--s)) solid var(--c); overflow: hidden; min-height: 0; }
+  .lane-h { flex: none; background: var(--c); color: #fff; padding: calc(10px * var(--s)) calc(16px * var(--s)); }
+  .lane-h .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .lane-h .nm { font-size: calc(28px * var(--s)); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lane-h .pl { font-size: calc(22px * var(--s)); font-weight: 700; background: rgba(255,255,255,.22); border-radius: 999px; padding: calc(4px * var(--s)) calc(14px * var(--s)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 62%; }
+  .bar { margin-top: calc(8px * var(--s)); height: calc(14px * var(--s)); background: rgba(255,255,255,.3); border-radius: 999px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: #fff; border-radius: 999px; transition: width .4s; }
+  .lane-b { flex: 1; display: flex; flex-direction: column; padding: calc(14px * var(--s)); gap: calc(12px * var(--s)); min-height: 0; }
+  .tag { align-self: flex-start; font-size: calc(17px * var(--s)); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--c); background: color-mix(in srgb, var(--c) 12%, white); border-radius: 999px; padding: calc(4px * var(--s)) calc(14px * var(--s)); }
+  .q { font-size: calc(27px * var(--s)); font-weight: 700; line-height: 1.3; }
+  .opts { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: calc(10px * var(--s)); min-height: 0; }
+  .opts.one { grid-template-columns: 1fr; }
+  .opt { min-height: calc(76px * var(--s)); border-radius: calc(18px * var(--s)); border: calc(3px * var(--s)) solid var(--line); background: #f6f8fc; font-size: calc(23px * var(--s)); font-weight: 700; padding: calc(8px * var(--s)) calc(12px * var(--s)); line-height: 1.25; display: flex; align-items: center; justify-content: center; text-align: center; transition: transform .08s; position: relative; }
+  .opt:active { transform: scale(.97); }
+  .opt.cmd { font-family: Consolas, "Courier New", monospace; }
+  .opt.no { background: #fde8e8; border-color: var(--bad); color: #a33; opacity: .55; pointer-events: none; text-decoration: line-through; }
+  .opt.yes { background: #e3f6eb; border-color: var(--ok); color: #126b39; }
+  .opt.tf-t { background: #e3f6eb; border-color: #9fd8b6; font-size: calc(32px * var(--s)); }
+  .opt.tf-f { background: #fde8e8; border-color: #f0b0b0; font-size: calc(32px * var(--s)); }
+  .opt.done { background: var(--c); border-color: var(--c); color: #fff; pointer-events: none; }
+  .opt .n { position: absolute; top: calc(6px * var(--s)); left: calc(10px * var(--s)); font-family: "Segoe UI", sans-serif; font-size: calc(18px * var(--s)); font-weight: 800; background: rgba(255,255,255,.25); border-radius: 999px; padding: 0 calc(8px * var(--s)); }
+  .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: calc(16px * var(--s)); }
+  .center .msg { font-size: calc(34px * var(--s)); font-weight: 800; }
+  .center .sub { font-size: calc(22px * var(--s)); color: var(--muted); font-weight: 600; }
+  .pass { min-height: calc(110px * var(--s)); width: 90%; border: none; border-radius: calc(24px * var(--s)); background: var(--c); color: #fff; font-size: calc(32px * var(--s)); font-weight: 800; box-shadow: 0 calc(6px * var(--s)) 0 rgba(0,0,0,.25); animation: pulse 1.4s infinite; }
+  .pass:active { transform: translateY(3px); }
+  @keyframes pulse { 50% { transform: scale(1.03); } }
+  .medal { font-size: calc(110px * var(--s)); line-height: 1; }
+  .place { font-size: calc(48px * var(--s)); font-weight: 900; color: var(--c); }
+  .lock { position: absolute; inset: 0; background: rgba(214,69,69,.88); color: #fff; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px; z-index: 5; }
+  .lock.on { display: flex; }
+  .lock .lt { font-size: calc(34px * var(--s)); font-weight: 800; }
+  .lock .cd { font-size: calc(120px * var(--s)); font-weight: 900; line-height: 1; }
+  .flash { position: absolute; inset: 0; background: rgba(31,157,85,.9); color: #fff; display: none; align-items: center; justify-content: center; font-size: calc(54px * var(--s)); font-weight: 900; z-index: 5; }
+  .flash.on { display: flex; }
+  .shake { animation: shake .4s; }
+  @keyframes shake { 20%,60% { transform: translateX(-10px); } 40%,80% { transform: translateX(10px); } }
+
+  /* overlays */
+  .ov { position: fixed; inset: 0; background: rgba(20,33,61,.72); display: none; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+  .ov.on { display: flex; }
+  .box { background: var(--card); border-radius: 28px; padding: 36px 44px; width: min(1000px, 100%); max-height: 100%; overflow-y: auto; text-align: center; }
+  .box h2 { margin: 0 0 20px; font-size: 44px; }
+  .box p { font-size: 28px; margin: 0 0 26px; }
+  .btns { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+  .btn2 { min-height: 88px; min-width: 220px; padding: 0 36px; border-radius: 22px; border: none; font-size: 30px; font-weight: 800; background: #e6ebf3; }
+  .btn2.pri { background: var(--accent); color: #fff; }
+  .btn2.red { background: var(--bad); color: #fff; }
+  #countdown .num { font-size: 260px; font-weight: 900; color: #fff; line-height: 1; text-shadow: 0 8px 30px rgba(0,0,0,.3); text-align: center; }
+  #countdown .lbl { font-size: 48px; font-weight: 800; color: #fff; text-align: center; }
+  table.res { width: 100%; border-collapse: collapse; margin: 0 0 28px; font-size: 26px; }
+  table.res th { text-align: left; color: var(--muted); font-size: 20px; padding: 10px 14px; border-bottom: 3px solid var(--line); }
+  table.res td { padding: 14px; border-bottom: 2px solid var(--line); font-weight: 700; text-align: left; }
+  table.res td.pl { font-size: 34px; width: 90px; }
+  .sw { display: inline-block; width: 22px; height: 22px; border-radius: 6px; margin-right: 10px; vertical-align: -3px; }
+  #banner { position: fixed; left: 50%; top: 90px; transform: translateX(-50%) translateY(-200%); background: #ffd23f; color: var(--ink); font-size: 34px; font-weight: 900; padding: 16px 40px; border-radius: 999px; box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index: 40; transition: transform .5s, opacity .5s; white-space: nowrap; opacity: 0; visibility: hidden; }
+  #banner.on { transform: translateX(-50%) translateY(0); opacity: 1; visibility: visible; }
+  #toast { position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%); background: var(--ink); color: #fff; font-size: 24px; font-weight: 800; padding: 16px 30px; border-radius: 18px; z-index: 70; opacity: 0; visibility: hidden; transition: opacity .3s; }
+  #toast.on { opacity: 1; visibility: visible; }
+  #fx { position: fixed; inset: 0; pointer-events: none; z-index: 60; }
+
+  @media (max-width: 1000px) {
+    .grid2, .students, .ed .row2 { grid-template-columns: 1fr; }
+    .brand h1 { font-size: 34px; }
+    .panel { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= SOZLAMALAR ================= -->
+<section id="settings" class="screen on">
+  <div class="panel">
+    <div class="brand">
+      <h1 id="tTitle"></h1>
+      <div class="seg" id="langSeg">
+        <button data-lang="uz">O'zbekcha</button>
+        <button data-lang="kk">Қарақалпақша</button>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="field"><div class="lbl" id="tTeams"></div>
+        <div class="stepper" data-key="teams"><button data-d="-1">−</button><div class="val"></div><button data-d="1">+</button></div></div>
+      <div class="field"><div class="lbl" id="tTpp"></div>
+        <div class="stepper" data-key="tpp"><button data-d="-1">−</button><div class="val"></div><button data-d="1">+</button></div></div>
+      <div class="field"><div class="lbl" id="tPlayers"></div>
+        <div class="stepper" data-key="players"><button data-d="-1">−</button><div class="val"></div><button data-d="1">+</button></div>
+        <div class="hint" id="tPlayersHint"></div></div>
+      <div class="field"><div class="lbl" id="tSound"></div>
+        <div class="seg" id="soundSeg" style="width:100%"><button data-snd="1" style="flex:1"></button><button data-snd="0" style="flex:1"></button></div></div>
+      <div class="field" style="grid-column:1/-1">
+        <div class="lbl" id="tStudents"></div>
+        <div class="students">
+          <div>
+            <textarea id="stuText" spellcheck="false"></textarea>
+            <div class="srow">
+              <button class="btn3 pri" id="stuSplit"></button>
+              <button class="btn3 red" id="stuClear"></button>
+              <span class="scount" id="stuCount"></span>
+            </div>
+          </div>
+          <div class="tcards" id="tcards"></div>
+        </div>
+      </div>
+    </div>
+    <div class="rules"><b id="tRules"></b><ol id="rulesList"></ol></div>
+    <div class="foot">
+      <button class="btn3" id="toAdmin"></button>
+      <div class="total" id="tTotal"></div>
+      <button class="big" id="startBtn"></button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ADMIN PANEL ================= -->
+<section id="admin" class="screen">
+  <div class="panel">
+    <div class="atop">
+      <h1 id="aTitle"></h1>
+      <button class="btn3" id="aBack"></button>
+      <button class="btn3 pri" id="aAdd"></button>
+    </div>
+    <div class="filters" id="aFilters"></div>
+    <div class="qlist" id="aList"></div>
+    <div class="foot">
+      <div class="total" id="aCount"></div>
+      <div class="srow" style="margin:0">
+        <button class="btn3" id="aExport"></button>
+        <button class="btn3" id="aImport"></button>
+        <button class="btn3 red" id="aReset"></button>
+      </div>
+    </div>
+    <input type="file" id="aFile" accept=".json,application/json" style="display:none">
+  </div>
+</section>
+
+<!-- ================= O'YIN ================= -->
+<section id="game" class="screen">
+  <div class="topbar">
+    <div class="t" id="gTitle"></div>
+    <div class="clock" id="clock">00:00</div>
+    <button class="tb" id="gLang"></button>
+    <button class="tb" id="gFull">⛶</button>
+    <button class="tb end" id="gEnd"></button>
+  </div>
+  <div class="lanes" id="lanes"></div>
+</section>
+
+<div id="banner"></div>
+<div id="toast"></div>
+
+<div class="ov" id="countdown"><div><div class="lbl" id="cdLbl"></div><div class="num" id="cdNum">3</div></div></div>
+
+<div class="ov" id="confirm"><div class="box">
+  <h2 id="cfTitle"></h2><p id="cfText"></p>
+  <div class="btns"><button class="btn2" id="cfNo"></button><button class="btn2 red" id="cfYes"></button></div>
+</div></div>
+
+<div class="ov" id="editor"><div class="box ed">
+  <h2 id="edTitle"></h2>
+  <label class="l" id="edTypeL"></label>
+  <select id="edType"></select>
+  <div class="row2">
+    <div><label class="l" id="edQuzL"></label><input type="text" id="edQuz"></div>
+    <div><label class="l" id="edQkkL"></label><input type="text" id="edQkk"></div>
+  </div>
+  <div class="note" id="edNote"></div>
+  <label class="l" id="edAnsL"></label>
+  <div id="edAns"></div>
+  <div class="err" id="edErr"></div>
+  <div class="btns"><button class="btn2" id="edCancel"></button><button class="btn2 pri" id="edSave"></button></div>
+</div></div>
+
+<div class="ov" id="results"><div class="box">
+  <h2 id="rsTitle"></h2>
+  <table class="res"><thead><tr id="rsHead"></tr></thead><tbody id="rsBody"></tbody></table>
+  <div class="btns"><button class="btn2" id="rsSettings"></button><button class="btn2 pri" id="rsAgain"></button></div>
+</div></div>
+
+<canvas id="fx"></canvas>
+
+<script>
+/* =========================================================
+   INTERFEYS MATNLARI
+   ========================================================= */
+const T = {
+  uz: {
+    title: 'Git va GitHub <span>poygasi</span>', titlePlain: 'Git va GitHub poygasi',
+    teams: 'Jamoalar soni', players: "Har bir jamoadagi o'yinchilar", tpp: "Har bir o'yinchiga topshiriq",
+    playersAuto: "O'quvchilar ismlari kiritilgani uchun bu son avtomatik hisoblanadi.",
+    sound: 'Ovoz', on: 'Yoqilgan', off: "O'chirilgan", team: n => n + '-jamoa',
+    students: "O'quvchilar (har bir ismni yangi qatorga yozing)", stuPh: 'Aziz\nMalika\nJasur\nDilnoza\n…',
+    split: '🎲 Jamoalarga taqsimlash', resplit: '🔀 Qayta aralashtirish', clear: 'Tozalash',
+    stuCount: n => `${n} ta o'quvchi`, noMembers: "Ismlar kiritilmagan — o'yinchilar raqam bilan ko'rsatiladi",
+    needNames: n => `Kamida ${n} ta ism kiriting`, splitDone: "O'quvchilar jamoalarga taqsimlandi",
+    rules: 'Qoidalar',
+    rulesList: ["Har bir o'yinchi o'z topshirig'ini bajarib, navbatni keyingi jamoadoshiga uzatadi.", 'Xato javobdan keyin jamoa 3 soniya kutadi va qayta urinadi.', "Barcha topshiriqlarni birinchi bo'lib to'g'ri bajargan jamoa g'olib bo'ladi."],
+    total: n => `Har bir jamoa <b>${n}</b> ta topshiriq bajaradi`, start: "O'yinni boshlash ▶", toAdmin: '⚙ Topshiriqlar',
+    ready: 'Tayyorlaning!', go: 'Boshladik!',
+    player: n => n + "-o'yinchi",
+    types: { mc: 'Savol', cmd: 'Buyruqni tanlang', tf: "To'g'ri yoki noto'g'ri?", ord: "To'g'ri tartibda bosing" },
+    yes: "To'g'ri", no: "Noto'g'ri", correct: "To'g'ri! ✓", wrong: 'Xato! Kuting…',
+    passMsg: 'Barakalla! 👏', passSub: 'Navbatni keyingi jamoadoshga uzating', passBtn: who => `${who}, boshlash →`,
+    finish: 'Marra!', place: n => n + "-o'rin", winner: t => `🏆 ${t} g'olib bo'ldi!`,
+    end: 'Tugatish', cfTitle: "O'yinni tugatamizmi?", cfText: "O'yin to'xtatiladi va natijalar ko'rsatiladi.", cfYes: 'Ha, tugatish', cfNo: "Yo'q, davom etish",
+    results: 'Natijalar', cols: ["O'rin", 'Jamoa', 'Vaqt', 'Xatolar', 'Bajarildi'], again: "Qayta o'ynash", toSettings: 'Sozlamalar', lang: 'Qq',
+    emptyBank: "Topshiriqlar yo'q. «Topshiriqlar» bo'limidan qo'shing.",
+    // admin
+    aTitle: 'Topshiriqlarni boshqarish', back: '← Orqaga', add: '+ Yangi topshiriq', all: 'Hammasi',
+    typeNames: { mc: 'Savol', cmd: 'Buyruq', tf: "To'g'ri/Noto'g'ri", ord: 'Ketma-ketlik' },
+    typeLong: { mc: 'Savol — 4 ta javob variantidan birini tanlash', cmd: 'Buyruq — vaziyatga mos Git buyrug\'ini tanlash', tf: "To'g'ri yoki noto'g'ri", ord: "Ketma-ketlik — qadamlarni to'g'ri tartibda bosish" },
+    edit: '✏ Tahrirlash', del: "🗑 O'chirish", count: n => `Jami: <b>${n}</b> ta topshiriq`,
+    exp: '⬇ Faylga saqlash', imp: '⬆ Fayldan yuklash', reset: '↺ Asl holiga qaytarish',
+    newTask: 'Yangi topshiriq', editTask: 'Topshiriqni tahrirlash', type: 'Topshiriq turi',
+    qUz: "Savol (o'zbekcha)", qKk: 'Savol (qoraqalpoqcha)',
+    kkNote: "Qoraqalpoqcha maydon bo'sh qolsa, o'yinda o'zbekcha matn ko'rsatiladi.",
+    ansL: "Javob variantlari — to'g'risini ✓ bilan belgilang", stepsL: "Qadamlar — to'g'ri tartibda yozing (3–5 ta)", tfL: "To'g'ri javob",
+    ansUz: "o'zbekcha", ansKk: 'qoraqalpoqcha (ixtiyoriy)',
+    save: 'Saqlash', cancel: 'Bekor qilish',
+    errQ: 'Savol matnini kiriting', errA: 'Kamida 2 ta javob variantini kiriting', errC: "To'g'ri javobni ✓ bilan belgilang", errS: 'Kamida 3 ta qadam kiriting',
+    delTitle: "Topshiriq o'chirilsinmi?", delYes: "Ha, o'chirish",
+    resetTitle: 'Asl topshiriqlar qaytarilsinmi?', resetText: "Siz qo'shgan va o'zgartirgan barcha topshiriqlar o'chadi.", resetYes: 'Ha, qaytarish',
+    saved: 'Saqlandi', deleted: "O'chirildi", imported: n => `${n} ta topshiriq yuklandi`, badFile: "Fayl noto'g'ri", resetDone: 'Asl topshiriqlar qaytarildi'
+  },
+  kk: {
+    title: 'Git ҳәм GitHub <span>жарысы</span>', titlePlain: 'Git ҳәм GitHub жарысы',
+    teams: 'Топарлар саны', players: 'Ҳәр бир топардағы ойыншылар', tpp: 'Ҳәр бир ойыншыға тапсырма',
+    playersAuto: 'Оқыўшылардың атлары киргизилгени ушын бул сан автомат түрде есапланады.',
+    sound: 'Даўыс', on: 'Қосылған', off: 'Өширилген', team: n => n + '-топар',
+    students: 'Оқыўшылар (ҳәр бир атты жаңа қатарға жазың)', stuPh: 'Азиз\nМалика\nЖасур\nДилноза\n…',
+    split: '🎲 Топарларға бөлиў', resplit: '🔀 Қайта араластырыў', clear: 'Тазалаў',
+    stuCount: n => `${n} оқыўшы`, noMembers: 'Атлар киргизилмеген — ойыншылар номер менен көрсетиледи',
+    needNames: n => `Кеминде ${n} ат киргизиң`, splitDone: 'Оқыўшылар топарларға бөлинди',
+    rules: 'Қағыйдалар',
+    rulesList: ['Ҳәр бир ойыншы өз тапсырмасын орынлап, гезекти кейинги топарласына береди.', 'Қәте жуўаптан кейин топар 3 секунд күтеди ҳәм қайта урынып көреди.', 'Барлық тапсырмаларды биринши болып дурыс орынлаған топар жеңимпаз болады.'],
+    total: n => `Ҳәр бир топар <b>${n}</b> тапсырма орынлайды`, start: 'Ойынды баслаў ▶', toAdmin: '⚙ Тапсырмалар',
+    ready: 'Таяр болың!', go: 'Басладық!',
+    player: n => n + '-ойыншы',
+    types: { mc: 'Сораў', cmd: 'Буйрықты таңлаң', tf: 'Дурыс па, надурыс па?', ord: 'Дурыс избе-изликте басың' },
+    yes: 'Дурыс', no: 'Надурыс', correct: 'Дурыс! ✓', wrong: 'Қәте! Күтиң…',
+    passMsg: 'Бәрекелла! 👏', passSub: 'Гезекти кейинги топарласыңызға бериң', passBtn: who => `${who}, баслаў →`,
+    finish: 'Мәре!', place: n => n + '-орын', winner: t => `🏆 ${t} жеңимпаз болды!`,
+    end: 'Тамамлаў', cfTitle: 'Ойынды тамамлаймыз ба?', cfText: 'Ойын тоқтатылады ҳәм нәтийжелер көрсетиледи.', cfYes: 'Аўа, тамамлаў', cfNo: 'Жоқ, даўам етиў',
+    results: 'Нәтийжелер', cols: ['Орын', 'Топар', 'Ўақыт', 'Қәтелер', 'Орынланды'], again: 'Қайта ойнаў', toSettings: 'Сазламалар', lang: 'Uz',
+    emptyBank: 'Тапсырмалар жоқ. «Тапсырмалар» бөлиминен қосың.',
+    aTitle: 'Тапсырмаларды басқарыў', back: '← Артқа', add: '+ Жаңа тапсырма', all: 'Ҳәммеси',
+    typeNames: { mc: 'Сораў', cmd: 'Буйрық', tf: 'Дурыс/Надурыс', ord: 'Избе-излик' },
+    typeLong: { mc: 'Сораў — 4 жуўап вариантының бирин таңлаў', cmd: 'Буйрық — жағдайға сай Git буйрығын таңлаў', tf: 'Дурыс ямаса надурыс', ord: 'Избе-излик — қәдемлерди дурыс тәртипте басыў' },
+    edit: '✏ Өзгертиў', del: '🗑 Өшириў', count: n => `Жәми: <b>${n}</b> тапсырма`,
+    exp: '⬇ Файлға сақлаў', imp: '⬆ Файлдан жүклеў', reset: '↺ Дәслепки ҳалына қайтарыў',
+    newTask: 'Жаңа тапсырма', editTask: 'Тапсырманы өзгертиў', type: 'Тапсырма түри',
+    qUz: 'Сораў (өзбекше)', qKk: 'Сораў (қарақалпақша)',
+    kkNote: 'Қарақалпақша майдан бос қалса, ойында өзбекше текст көрсетиледи.',
+    ansL: 'Жуўап вариантлары — дурысын ✓ пенен белгилең', stepsL: 'Қәдемлер — дурыс тәртипте жазың (3–5)', tfL: 'Дурыс жуўап',
+    ansUz: 'өзбекше', ansKk: 'қарақалпақша (қәлеўиңизше)',
+    save: 'Сақлаў', cancel: 'Бийкарлаў',
+    errQ: 'Сораў текстин киргизиң', errA: 'Кеминде 2 жуўап вариантын киргизиң', errC: 'Дурыс жуўапты ✓ пенен белгилең', errS: 'Кеминде 3 қәдем киргизиң',
+    delTitle: 'Тапсырма өширилсин бе?', delYes: 'Аўа, өшириў',
+    resetTitle: 'Дәслепки тапсырмалар қайтарылсын ба?', resetText: 'Сиз қосқан ҳәм өзгерткен барлық тапсырмалар өшеди.', resetYes: 'Аўа, қайтарыў',
+    saved: 'Сақланды', deleted: 'Өширилди', imported: n => `${n} тапсырма жүкленди`, badFile: 'Файл надурыс', resetDone: 'Дәслепки тапсырмалар қайтарылды'
+  }
+};
+
+/* =========================================================
+   ASL TOPSHIRIQLAR BANKI (boshlang'ich daraja)
+   t: mc (savol), cmd (buyruq), tf (to'g'ri/noto'g'ri), ord (ketma-ketlik)
+   Javob variantlarida c — to'g'ri javob tartib raqami (0 dan)
+   ========================================================= */
+const DEFAULT_Q = [
+  // --- Savol ---
+  { t: 'mc', q: { uz: 'Git nima?', kk: 'Git деген не?' }, c: 0, a: [
+    { uz: 'Versiyalarni boshqarish dasturi', kk: 'Версияларды басқарыў бағдарламасы' },
+    { uz: 'Ijtimoiy tarmoq', kk: 'Социаллық тармақ' },
+    { uz: 'Brauzer', kk: 'Браузер' },
+    { uz: 'Antivirus', kk: 'Антивирус' }] },
+  { t: 'mc', q: { uz: 'GitHub nima?', kk: 'GitHub деген не?' }, c: 0, a: [
+    { uz: 'Loyihalarni internetda saqlash sayti', kk: 'Жойбарларды интернетте сақлаў сайты' },
+    { uz: 'Matn muharriri', kk: 'Текст редакторы' },
+    { uz: 'Operatsion tizim', kk: 'Операциялық система' },
+    { uz: "Kompyuter o'yini", kk: 'Компьютер ойыны' }] },
+  { t: 'mc', q: { uz: 'Commit nima?', kk: 'Commit деген не?' }, c: 0, a: [
+    { uz: 'Loyihaning saqlangan versiyasi', kk: 'Жойбардың сақланған версиясы' },
+    { uz: "Faylni o'chirish", kk: 'Файлды өшириў' },
+    { uz: 'Internetga ulanish', kk: 'Интернетке қосылыў' },
+    { uz: 'Yangi papka yaratish', kk: 'Жаңа папка дүзиў' }] },
+  { t: 'mc', q: { uz: 'Repository nima?', kk: 'Repository деген не?' }, c: 0, a: [
+    { uz: 'Loyiha fayllari va tarixi saqlanadigan joy', kk: 'Жойбар файллары ҳәм тарийхы сақланатуғын орын' },
+    { uz: 'Kompyuterdagi brauzer', kk: 'Компьютердеги браузер' },
+    { uz: 'GitHub paroli', kk: 'GitHub пароли' },
+    { uz: 'Rasm fayli', kk: 'Сүўрет файлы' }] },
+  { t: 'mc', q: { uz: 'Branch nima?', kk: 'Branch деген не?' }, c: 0, a: [
+    { uz: "Loyihaning alohida ish yo'li (nusxasi)", kk: 'Жойбардың бөлек жумыс жолы (көширмеси)' },
+    { uz: 'Commit xabari', kk: 'Commit хабары' },
+    { uz: 'GitHub akkaunti', kk: 'GitHub аккаунты' },
+    { uz: 'Fayl kengaytmasi', kk: 'Файл кеңейтпеси' }] },
+  { t: 'mc', q: { uz: 'git push nima qiladi?', kk: 'git push не ислейди?' }, c: 0, a: [
+    { uz: "Commit'larni GitHub'ga yuboradi", kk: 'Commit лерди GitHub қа жибереди' },
+    { uz: "Faylni o'chiradi", kk: 'Файлды өширеди' },
+    { uz: 'Yangi papka yaratadi', kk: 'Жаңа папка дүзеди' },
+    { uz: "Tarixni ko'rsatadi", kk: 'Тарийхты көрсетеди' }] },
+  { t: 'mc', q: { uz: 'git pull nima qiladi?', kk: 'git pull не ислейди?' }, c: 0, a: [
+    { uz: "GitHub'dagi yangiliklarni kompyuterga oladi", kk: 'GitHub тағы жаңалықларды компьютерге алады' },
+    { uz: "Commit'ni o'chiradi", kk: 'Commit ти өширеди' },
+    { uz: 'Yangi branch yaratadi', kk: 'Жаңа branch дүзеди' },
+    { uz: 'Parolni o\'zgartiradi', kk: 'Парольди өзгертеди' }] },
+  { t: 'mc', q: { uz: 'git add nima qiladi?', kk: 'git add не ислейди?' }, c: 0, a: [
+    { uz: "Faylni commit'ga tayyorlaydi", kk: 'Файлды commit ке таярлайды' },
+    { uz: "Faylni GitHub'ga yuboradi", kk: 'Файлды GitHub қа жибереди' },
+    { uz: "Faylni o'chiradi", kk: 'Файлды өширеди' },
+    { uz: 'Yangi repository ochadi', kk: 'Жаңа repository ашады' }] },
+  { t: 'mc', q: { uz: 'README.md fayli nima uchun kerak?', kk: 'README.md файлы не ушын керек?' }, c: 0, a: [
+    { uz: 'Loyiha haqida yozish uchun', kk: 'Жойбар ҳаққында жазыў ушын' },
+    { uz: 'Rasmlarni saqlash uchun', kk: 'Сүўретлерди сақлаў ушын' },
+    { uz: 'Parolni saqlash uchun', kk: 'Парольди сақлаў ушын' },
+    { uz: "Faylni o'chirish uchun", kk: 'Файлды өшириў ушын' }] },
+  { t: 'mc', q: { uz: 'Merge nima?', kk: 'Merge деген не?' }, c: 0, a: [
+    { uz: "Ikki branch'ni birlashtirish", kk: 'Еки branch ты бирлестириў' },
+    { uz: "Faylni o'chirish", kk: 'Файлды өшириў' },
+    { uz: 'Repository yaratish', kk: 'Repository дүзиў' },
+    { uz: "Parolni o'zgartirish", kk: 'Парольди өзгертиў' }] },
+  { t: 'mc', q: { uz: "Yaxshi commit xabari qaysi?", kk: 'Жақсы commit хабары қайсы?' }, c: 0, a: [
+    { uz: "«Bosh sahifa qo'shildi»", kk: '«Бас бет қосылды»' },
+    { uz: '«asdfgh»', kk: '«asdfgh»' },
+    { uz: '«yana»', kk: '«және»' },
+    { uz: "«o'zgarish»", kk: '«өзгерис»' }] },
+  { t: 'mc', q: { uz: "Asosiy branch odatda qanday ataladi?", kk: 'Тийкарғы branch әдетте қалай аталады?' }, c: 0, a: ['main', 'start', 'home', 'first'] },
+  { t: 'mc', q: { uz: "Public repository'ni kim ko'ra oladi?", kk: 'Public repository ды ким көре алады?' }, c: 0, a: [
+    { uz: 'Internetdagi hamma', kk: 'Интернеттеги ҳәмме' },
+    { uz: 'Faqat egasi', kk: 'Тек иеси' },
+    { uz: 'Hech kim', kk: 'Ҳеш ким' },
+    { uz: "Faqat o'qituvchi", kk: 'Тек муғаллим' }] },
+  { t: 'mc', q: { uz: "Git o'zgarishlar tarixini qaysi papkada saqlaydi?", kk: 'Git өзгерислер тарийхын қайсы папкада сақлайды?' }, c: 0, a: ['.git', 'Desktop', 'Downloads', 'Documents'] },
+
+  // --- Buyruq ---
+  { t: 'cmd', q: { uz: "Git o'rnatilganini tekshirish kerak.", kk: 'Git орнатылғанын тексериў керек.' }, c: 0, a: ['git --version', 'git check', 'git install', 'git start'] },
+  { t: 'cmd', q: { uz: 'Papkada yangi Git repository yaratish kerak.', kk: 'Папкада жаңа Git repository дүзиў керек.' }, c: 0, a: ['git init', 'git start', 'git new', 'git create'] },
+  { t: 'cmd', q: { uz: "Qaysi fayllar o'zgarganini ko'rish kerak.", kk: 'Қайсы файллар өзгергенин көриў керек.' }, c: 0, a: ['git status', 'git push', 'git init', 'git clone'] },
+  { t: 'cmd', q: { uz: "Barcha o'zgargan fayllarni commit'ga tayyorlash kerak.", kk: 'Барлық өзгерген файлларды commit ке таярлаў керек.' }, c: 0, a: ['git add .', 'git push', 'git save', 'git init'] },
+  { t: 'cmd', q: { uz: 'Versiyani izoh bilan saqlash kerak.', kk: 'Версияны түсиндирме менен сақлаў керек.' }, c: 0, a: ['git commit -m "..."', 'git add .', 'git push', 'git pull'] },
+  { t: 'cmd', q: { uz: "O'zgarishlarni GitHub'ga yuborish kerak.", kk: 'Өзгерислерди GitHub қа жибериў керек.' }, c: 0, a: ['git push', 'git pull', 'git send', 'git log'] },
+  { t: 'cmd', q: { uz: "GitHub'dagi yangi o'zgarishlarni kompyuterga olish kerak.", kk: 'GitHub тағы жаңа өзгерислерди компьютерге алыў керек.' }, c: 0, a: ['git pull', 'git push', 'git get', 'git init'] },
+  { t: 'cmd', q: { uz: "GitHub'dagi loyihani kompyuterga ko'chirib olish kerak.", kk: 'GitHub тағы жойбарды компьютерге көширип алыў керек.' }, c: 0, a: ['git clone URL', 'git copy URL', 'git download URL', 'git add URL'] },
+  { t: 'cmd', q: { uz: "Commit'lar tarixini ko'rish kerak.", kk: 'Commit лер тарийхын көриў керек.' }, c: 0, a: ['git log', 'git history', 'git add', 'git push'] },
+  { t: 'cmd', q: { uz: "Faylda nima o'zgarganini ko'rish kerak.", kk: 'Файлда не өзгергенин көриў керек.' }, c: 0, a: ['git diff', 'git push', 'git init', 'git clone'] },
+  { t: 'cmd', q: { uz: "Branch'lar ro'yxatini ko'rish kerak.", kk: 'Branch лар дизимин көриў керек.' }, c: 0, a: ['git branch', 'git list', 'git show', 'git push'] },
+  { t: 'cmd', q: { uz: "«dizayn» nomli yangi branch ochib, unga o'tish kerak.", kk: '«dizayn» атлы жаңа branch ашып, оған өтиў керек.' }, c: 0, a: ['git switch -c dizayn', 'git merge dizayn', 'git push dizayn', 'git init dizayn'] },
+  { t: 'cmd', q: { uz: "«dizayn» branch'ini main bilan birlashtirish kerak.", kk: '«dizayn» branch ын main пенен бирлестириў керек.' }, c: 0, a: ['git merge dizayn', 'git clone dizayn', 'git add dizayn', 'git log dizayn'] },
+  { t: 'cmd', q: { uz: "Faylda qilingan, hali commit qilinmagan o'zgarishni bekor qilish kerak.", kk: 'Файлда исленген, еле commit етилмеген өзгеристи бийкарлаў керек.' }, c: 0, a: ['git restore index.html', 'git push index.html', 'git commit index.html', 'git clone index.html'] },
+  { t: 'cmd', q: { uz: 'Git uchun ismingizni kiritish kerak.', kk: 'Git ушын атыңызды киргизиў керек.' }, c: 0, a: ['git config --global user.name "Aziz"', 'git name "Aziz"', 'git user "Aziz"', 'git set "Aziz"'] },
+
+  // --- To'g'ri / noto'g'ri ---
+  { t: 'tf', q: { uz: "Git'dan foydalanish uchun internet albatta kerak.", kk: 'Git тен пайдаланыў ушын интернет шәрт.' }, c: false },
+  { t: 'tf', q: { uz: "GitHub — loyihalarni internetda saqlaydigan sayt.", kk: 'GitHub — жойбарларды интернетте сақлайтуғын сайт.' }, c: true },
+  { t: 'tf', q: { uz: "git add o'zgarishlarni GitHub'ga yuboradi.", kk: 'git add өзгерислерди GitHub қа жибереди.' }, c: false },
+  { t: 'tf', q: { uz: "git commit'dan oldin git add qilish kerak.", kk: 'git commit тен алдын git add етиў керек.' }, c: true },
+  { t: 'tf', q: { uz: "Private repository'ni internetdagi hamma ko'ra oladi.", kk: 'Private repository ды интернеттеги ҳәмме көре алады.' }, c: false },
+  { t: 'tf', q: { uz: 'Asosiy branch odatda main deb ataladi.', kk: 'Тийкарғы branch әдетте main деп аталады.' }, c: true },
+  { t: 'tf', q: { uz: 'git status fayllarni o\'chirib yuboradi.', kk: 'git status файлларды өширип жибереди.' }, c: false },
+  { t: 'tf', q: { uz: "GitHub'dan foydalanish uchun akkaunt ochish kerak.", kk: 'GitHub тан пайдаланыў ушын аккаунт ашыў керек.' }, c: true },
+  { t: 'tf', q: { uz: "Har bir commit'ga qisqa izoh (xabar) yoziladi.", kk: 'Ҳәр бир commit ке қысқа түсиндирме (хабар) жазылады.' }, c: true },
+  { t: 'tf', q: { uz: 'git clone yangi bo\'sh repository yaratadi.', kk: 'git clone жаңа бос repository дүзеди.' }, c: false },
+  { t: 'tf', q: { uz: "git push'dan keyin o'zgarishlar GitHub saytida ko'rinadi.", kk: 'git push тан кейин өзгерислер GitHub сайтында көринеди.' }, c: true },
+
+  // --- Ketma-ketlik ---
+  { t: 'ord', q: { uz: "Yangi loyihani GitHub'ga joylash", kk: 'Жаңа жойбарды GitHub қа жайластырыў' }, a: ['git init', 'git add .', 'git commit -m "..."', 'git push'] },
+  { t: 'ord', q: { uz: 'Har kungi ish tartibi', kk: 'Күнделикли жумыс тәртиби' }, a: ['git pull', 'git add .', 'git commit -m "..."', 'git push'] },
+  { t: 'ord', q: { uz: "O'zgarishni saqlab, GitHub'ga yuborish", kk: 'Өзгеристи сақлап, GitHub қа жибериў' }, a: ['git status', 'git add .', 'git commit -m "..."', 'git push'] },
+  { t: 'ord', q: { uz: 'Branch bilan ishlash', kk: 'Branch пенен ислеў' }, a: ['git switch -c dizayn', 'git commit -m "..."', 'git switch main', 'git merge dizayn'] },
+  { t: 'ord', q: { uz: "GitHub'dagi loyihani olib, o'zgarish kiritish", kk: 'GitHub тағы жойбарды алып, өзгерис киргизиў' }, a: ['git clone URL', 'git add .', 'git commit -m "..."', 'git push'] }
+];
+
+const COLORS = ['#2b6cb0', '#d6452f', '#1f9d55', '#7b3fbf', '#d98a00', '#0f8b8d'];
+const TYPES = ['mc', 'cmd', 'tf', 'ord'];
+
+/* =========================================================
+   SAQLASH (brauzer xotirasi)
+   ========================================================= */
+function load(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v == null ? fallback : v; } catch (e) { return fallback; } }
+function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+
+const S = Object.assign({ lang: 'kk', teams: 2, players: 4, tpp: 1, names: [], sound: true, students: '', roster: null }, load('gitRaceSettings', {}));
+const LIM = { teams: [2, 6], players: [1, 10], tpp: [1, 3] };
+function save() { store('gitRaceSettings', S); }
+
+const clone = o => JSON.parse(JSON.stringify(o));
+let BANK = load('gitRaceTasks', null);
+if (!Array.isArray(BANK)) BANK = clone(DEFAULT_Q);
+function saveBank() { store('gitRaceTasks', BANK); }
+
+/* =========================================================
+   YORDAMCHI FUNKSIYALAR
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const tr = () => T[S.lang];
+// Matn: oddiy satr yoki {uz, kk}. Qoraqalpoqcha bo'sh bo'lsa, o'zbekchasi olinadi
+const L = x => (typeof x === 'string' ? x : (x[S.lang] || x.uz || x.kk || ''));
+const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const teamName = i => (S.names[i] && S.names[i].trim()) || tr().team(i + 1);
+const studentList = () => S.students.split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
+const rosterOn = () => Array.isArray(S.roster) && S.roster.length === S.teams && S.roster.every(r => r.length);
+const playersPerTeam = () => (rosterOn() ? Math.max(...S.roster.map(r => r.length)) : S.players);
+
+let toastTimer = null;
+function toast(text) {
+  const el = $('toast'); el.textContent = text; el.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), 2200);
+}
+
+let confirmYes = null;
+function ask(title, text, yesLabel, onYes) {
+  const t = tr();
+  $('cfTitle').textContent = title; $('cfText').textContent = text;
+  $('cfYes').textContent = yesLabel; $('cfNo').textContent = t.cfNo.split(',')[0];
+  confirmYes = onYes; $('confirm').classList.add('on');
+}
+$('cfNo').addEventListener('click', () => { $('confirm').classList.remove('on'); confirmYes = null; });
+$('cfYes').addEventListener('click', () => { $('confirm').classList.remove('on'); const f = confirmYes; confirmYes = null; if (f) f(); });
+
+function show(id) { ['settings', 'admin', 'game'].forEach(s => $(s).classList.toggle('on', s === id)); }
+
+/* =========================================================
+   OVOZ
+   ========================================================= */
+let AC = null;
+function beep(ok) {
+  if (!S.sound) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = ok ? [660, 880] : [220, 160];
+    notes.forEach((f, k) => {
+      const o = AC.createOscillator(), g = AC.createGain();
+      o.type = ok ? 'triangle' : 'sawtooth'; o.frequency.value = f;
+      const t0 = AC.currentTime + k * 0.12;
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.2, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.18);
+      o.connect(g).connect(AC.destination); o.start(t0); o.stop(t0 + 0.2);
+    });
+  } catch (e) {}
+}
+
+/* =========================================================
+   SOZLAMALAR OYNASI
+   ========================================================= */
+function renderSettings() {
+  const t = tr();
+  document.documentElement.lang = S.lang === 'kk' ? 'kaa' : 'uz';
+  document.title = t.titlePlain;
+  $('tTitle').innerHTML = t.title;
+  $('tTeams').textContent = t.teams; $('tPlayers').textContent = t.players; $('tTpp').textContent = t.tpp;
+  $('tSound').textContent = t.sound; $('tStudents').textContent = t.students; $('tRules').textContent = t.rules;
+  $('rulesList').innerHTML = t.rulesList.map(r => `<li>${r}</li>`).join('');
+  $('startBtn').textContent = t.start; $('toAdmin').textContent = t.toAdmin;
+  $('tTotal').innerHTML = t.total(playersPerTeam() * S.tpp);
+  document.querySelectorAll('#langSeg button').forEach(b => b.classList.toggle('sel', b.dataset.lang === S.lang));
+  const sb = document.querySelectorAll('#soundSeg button');
+  sb[0].textContent = '🔊 ' + t.on; sb[1].textContent = '🔇 ' + t.off;
+  sb.forEach(b => b.classList.toggle('sel', (b.dataset.snd === '1') === S.sound));
+
+  const auto = rosterOn();
+  document.querySelectorAll('.stepper').forEach(st => {
+    const k = st.dataset.key, [mn, mx] = LIM[k];
+    const locked = k === 'players' && auto;
+    st.querySelector('.val').textContent = k === 'players' ? playersPerTeam() : S[k];
+    st.querySelector('[data-d="-1"]').disabled = locked || S[k] <= mn;
+    st.querySelector('[data-d="1"]').disabled = locked || S[k] >= mx;
+  });
+  $('tPlayersHint').textContent = auto ? t.playersAuto : '';
+
+  const ta = $('stuText');
+  if (document.activeElement !== ta) ta.value = S.students;
+  ta.placeholder = t.stuPh;
+  const n = studentList().length;
+  $('stuCount').textContent = n ? t.stuCount(n) : '';
+  $('stuSplit').textContent = auto ? t.resplit : t.split;
+  $('stuClear').textContent = t.clear;
+
+  const box = $('tcards'); box.innerHTML = '';
+  for (let i = 0; i < S.teams; i++) {
+    const card = document.createElement('div');
+    card.className = 'tcard'; card.style.setProperty('--c', COLORS[i]);
+    const inp = document.createElement('input');
+    inp.maxLength = 18; inp.placeholder = t.team(i + 1); inp.value = S.names[i] || '';
+    inp.addEventListener('input', () => { S.names[i] = inp.value; save(); });
+    const mem = document.createElement('div'); mem.className = 'mem';
+    mem.innerHTML = auto ? S.roster[i].map(s => `<span class="chip">${esc(s)}</span>`).join('') : `<span class="empty">${t.noMembers}</span>`;
+    card.append(inp, mem); box.appendChild(card);
+  }
+}
+
+function splitStudents(silent) {
+  const names = studentList();
+  if (names.length < S.teams) { if (!silent) toast(tr().needNames(S.teams)); S.roster = null; save(); renderSettings(); return; }
+  const roster = Array.from({ length: S.teams }, () => []);
+  shuffle(names).forEach((s, k) => roster[k % S.teams].push(s));
+  S.roster = shuffle(roster);
+  save(); renderSettings();
+  if (!silent) toast(tr().splitDone);
+}
+
+document.querySelectorAll('.stepper').forEach(st => st.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || b.disabled) return;
+  const k = st.dataset.key, [mn, mx] = LIM[k];
+  S[k] = Math.min(mx, Math.max(mn, S[k] + Number(b.dataset.d)));
+  if (k === 'teams' && S.roster) { splitStudents(true); return; }
+  save(); renderSettings();
+}));
+$('langSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { S.lang = b.dataset.lang; save(); renderSettings(); } });
+$('soundSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { S.sound = b.dataset.snd === '1'; save(); renderSettings(); } });
+$('stuText').addEventListener('input', e => {
+  S.students = e.target.value;
+  if (S.roster) S.roster = null; // ismlar o'zgardi — taqsimlash qaytadan qilinadi
+  save(); renderSettings();
+});
+$('stuSplit').addEventListener('click', () => splitStudents(false));
+$('stuClear').addEventListener('click', () => { S.students = ''; S.roster = null; save(); $('stuText').value = ''; renderSettings(); });
+$('startBtn').addEventListener('click', () => { if (!BANK.length) { toast(tr().emptyBank); return; } startGame(); });
+$('toAdmin').addEventListener('click', () => { show('admin'); renderAdmin(); });
+
+/* =========================================================
+   ADMIN PANEL
+   ========================================================= */
+let adminFilter = 'all';
+function preview(task) {
+  if (task.t === 'tf') return task.c ? '✓ ' + tr().yes : '✗ ' + tr().no;
+  if (task.t === 'ord') return task.a.map(L).join(' → ');
+  return '✓ ' + L(task.a[task.c]);
+}
+function renderAdmin() {
+  const t = tr();
+  $('aTitle').textContent = t.aTitle; $('aBack').textContent = t.back; $('aAdd').textContent = t.add;
+  $('aExport').textContent = t.exp; $('aImport').textContent = t.imp; $('aReset').textContent = t.reset;
+  $('aCount').innerHTML = t.count(BANK.length);
+  $('aFilters').innerHTML = ['all', ...TYPES].map(k => {
+    const n = k === 'all' ? BANK.length : BANK.filter(q => q.t === k).length;
+    return `<button data-f="${k}" class="${adminFilter === k ? 'sel' : ''}">${k === 'all' ? t.all : t.typeNames[k]} (${n})</button>`;
+  }).join('');
+  $('aList').innerHTML = BANK.map((q, i) => ({ q, i })).filter(o => adminFilter === 'all' || o.q.t === adminFilter).map(({ q, i }) => `
+    <div class="qitem">
+      <div class="num">${i + 1}</div>
+      <div><div class="qt"><span class="tp">${t.typeNames[q.t]}</span>${esc(L(q.q))}</div><div class="qs">${esc(preview(q))}</div></div>
+      <div class="acts"><button data-e="${i}">${t.edit}</button><button class="d" data-x="${i}">${t.del}</button></div>
+    </div>`).join('');
+}
+$('aFilters').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { adminFilter = b.dataset.f; renderAdmin(); } });
+$('aList').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.e != null) openEditor(Number(b.dataset.e));
+  if (b.dataset.x != null) {
+    const i = Number(b.dataset.x), t = tr();
+    ask(t.delTitle, L(BANK[i].q), t.delYes, () => { BANK.splice(i, 1); saveBank(); renderAdmin(); toast(t.deleted); });
+  }
+});
+$('aBack').addEventListener('click', () => { show('settings'); renderSettings(); });
+$('aAdd').addEventListener('click', () => openEditor(-1));
+$('aReset').addEventListener('click', () => {
+  const t = tr();
+  ask(t.resetTitle, t.resetText, t.resetYes, () => { BANK = clone(DEFAULT_Q); saveBank(); renderAdmin(); toast(t.resetDone); });
+});
+$('aExport').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(BANK, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'git-oyin-topshiriqlar.json';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$('aImport').addEventListener('click', () => $('aFile').click());
+$('aFile').addEventListener('change', e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const data = JSON.parse(rd.result);
+      const ok = Array.isArray(data) && data.length && data.every(validTask);
+      if (!ok) throw new Error('bad');
+      BANK = data; saveBank(); renderAdmin(); toast(tr().imported(data.length));
+    } catch (err) { toast(tr().badFile); }
+  };
+  rd.readAsText(f);
+});
+function validTask(q) {
+  if (!q || !TYPES.includes(q.t) || !q.q || !L(q.q)) return false;
+  if (q.t === 'tf') return typeof q.c === 'boolean';
+  if (!Array.isArray(q.a)) return false;
+  if (q.t === 'ord') return q.a.length >= 3;
+  return q.a.length >= 2 && Number.isInteger(q.c) && q.c >= 0 && q.c < q.a.length;
+}
+
+/* --- tahrirlash oynasi --- */
+let edIndex = -1, edState = null;
+function blankAns(n) { return Array.from({ length: n }, () => ({ uz: '', kk: '' })); }
+function toPair(x) { return typeof x === 'string' ? { uz: x, kk: '' } : { uz: x.uz || '', kk: x.kk || '' }; }
+function openEditor(i) {
+  edIndex = i;
+  const src = i >= 0 ? clone(BANK[i]) : { t: 'mc', q: { uz: '', kk: '' }, c: 0, a: blankAns(4) };
+  edState = { t: src.t, q: toPair(src.q), c: src.c, a: (src.a || []).map(toPair) };
+  fillEditor();
+  $('editor').classList.add('on');
+}
+function normalizeAnswers() {
+  const want = edState.t === 'ord' ? 5 : edState.t === 'tf' ? 0 : 4;
+  const a = edState.a.slice(0, want);
+  while (a.length < want) a.push({ uz: '', kk: '' });
+  edState.a = a;
+  if (edState.t === 'tf' && typeof edState.c !== 'boolean') edState.c = true;
+  if ((edState.t === 'mc' || edState.t === 'cmd') && !Number.isInteger(edState.c)) edState.c = 0;
+}
+function fillEditor() {
+  const t = tr();
+  normalizeAnswers();
+  $('edTitle').textContent = edIndex >= 0 ? t.editTask : t.newTask;
+  $('edTypeL').textContent = t.type;
+  $('edType').innerHTML = TYPES.map(k => `<option value="${k}" ${k === edState.t ? 'selected' : ''}>${t.typeLong[k]}</option>`).join('');
+  $('edQuzL').textContent = t.qUz; $('edQkkL').textContent = t.qKk; $('edNote').textContent = t.kkNote;
+  $('edQuz').value = edState.q.uz; $('edQkk').value = edState.q.kk;
+  $('edSave').textContent = t.save; $('edCancel').textContent = t.cancel; $('edErr').textContent = '';
+  const box = $('edAns');
+  if (edState.t === 'tf') {
+    $('edAnsL').textContent = t.tfL;
+    box.innerHTML = `<div class="seg" style="width:100%"><button data-tf="1" style="flex:1" class="${edState.c ? 'sel' : ''}">✓ ${t.yes}</button><button data-tf="0" style="flex:1" class="${!edState.c ? 'sel' : ''}">✗ ${t.no}</button></div>`;
+    return;
+  }
+  const isOrd = edState.t === 'ord';
+  $('edAnsL').textContent = isOrd ? t.stepsL : t.ansL;
+  box.innerHTML = edState.a.map((a, k) => `
+    <div class="ans${isOrd ? ' o' : ''}">
+      ${isOrd ? `<div class="stepn">${k + 1}</div>` : `<button class="rad${edState.c === k ? ' sel' : ''}" data-c="${k}">✓</button>`}
+      <input type="text" data-k="${k}" data-l="uz" value="${esc(a.uz)}" placeholder="${t.ansUz}">
+      <input type="text" data-k="${k}" data-l="kk" value="${esc(a.kk)}" placeholder="${t.ansKk}">
+    </div>`).join('');
+}
+$('edType').addEventListener('change', e => { readEditorInputs(); edState.t = e.target.value; fillEditor(); });
+$('edAns').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  readEditorInputs();
+  if (b.dataset.tf != null) edState.c = b.dataset.tf === '1';
+  if (b.dataset.c != null) edState.c = Number(b.dataset.c);
+  fillEditor();
+});
+function readEditorInputs() {
+  edState.q = { uz: $('edQuz').value.trim(), kk: $('edQkk').value.trim() };
+  document.querySelectorAll('#edAns input').forEach(inp => { edState.a[Number(inp.dataset.k)][inp.dataset.l] = inp.value.trim(); });
+}
+$('edCancel').addEventListener('click', () => $('editor').classList.remove('on'));
+$('edSave').addEventListener('click', () => {
+  const t = tr();
+  readEditorInputs();
+  const err = m => { $('edErr').textContent = m; };
+  const q = { uz: edState.q.uz || edState.q.kk, kk: edState.q.kk };
+  if (!q.uz) return err(t.errQ);
+  let task;
+  if (edState.t === 'tf') task = { t: 'tf', q, c: !!edState.c };
+  else {
+    // bo'sh qatorlarni olib tashlaymiz, to'g'ri javob raqamini ham shunga moslaymiz
+    const filled = edState.a.map((a, k) => ({ a: { uz: a.uz || a.kk, kk: a.kk }, k })).filter(o => o.a.uz);
+    if (edState.t === 'ord') {
+      if (filled.length < 3) return err(t.errS);
+      task = { t: 'ord', q, a: filled.map(o => o.a) };
+    } else {
+      if (filled.length < 2) return err(t.errA);
+      const c = filled.findIndex(o => o.k === edState.c);
+      if (c < 0) return err(t.errC);
+      task = { t: edState.t, q, c, a: filled.map(o => o.a) };
+    }
+  }
+  if (edIndex >= 0) BANK[edIndex] = task; else BANK.push(task);
+  saveBank();
+  $('editor').classList.remove('on');
+  if (edIndex < 0) adminFilter = 'all';
+  renderAdmin(); toast(t.saved);
+  if (edIndex < 0) $('admin').scrollTop = $('admin').scrollHeight;
+});
+
+/* =========================================================
+   O'YIN
+   ========================================================= */
+let G = null;
+
+function buildTasks(n) {
+  // Har bir jamoaga savollar alohida aralashtiriladi; bank tugasa, qayta aralashtiriladi
+  const out = []; let pool = [];
+  while (out.length < n) {
+    if (!pool.length) pool = shuffle(BANK);
+    out.push(prepTask(pool.pop()));
+  }
+  return out;
+}
+function prepTask(q) {
+  const task = { q, wrongSet: new Set() };
+  if (q.t === 'ord') { task.order = shuffle(q.a.map((_, i) => i)); task.step = 0; }
+  else if (q.t !== 'tf') task.order = shuffle(q.a.map((_, i) => i));
+  return task;
+}
+
+function startGame() {
+  save();
+  const total = playersPerTeam() * S.tpp;
+  const roster = rosterOn() ? S.roster : null;
+  G = {
+    total, start: 0, running: false, finished: 0, ended: false,
+    lanes: Array.from({ length: S.teams }, (_, i) => ({
+      i, color: COLORS[i], members: roster ? roster[i] : null, tasks: buildTasks(total), idx: 0, phase: 'task',
+      mistakes: 0, lockUntil: 0, finishMs: null, place: null
+    }))
+  };
+  show('game');
+  buildLanes();
+  countdown();
+}
+
+// Navbatdagi o'yinchi: ism (agar kiritilgan bo'lsa) yoki raqam.
+// O'quvchisi kamroq jamoada ro'yxat boshidan qayta aylanadi
+function whoAt(ln, idx) {
+  const p = Math.floor(Math.min(idx, G.total - 1) / S.tpp);
+  return ln.members ? ln.members[p % ln.members.length] : tr().player(p + 1);
+}
+
+function layout() {
+  const n = S.teams;
+  const cols = n <= 3 ? n : n === 4 ? 2 : 3;
+  const rows = Math.ceil(n / cols);
+  const lanes = $('lanes');
+  lanes.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  lanes.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  const w = (innerWidth - 20) / cols, h = (innerHeight - 96) / rows;
+  const s = Math.max(0.62, Math.min(1.5, Math.min(w / 600, h / 560)));
+  lanes.style.setProperty('--s', s.toFixed(3));
+}
+addEventListener('resize', () => { if (G) layout(); });
+
+function buildLanes() {
+  const t = tr();
+  $('gTitle').textContent = t.titlePlain;
+  $('gEnd').textContent = t.end;
+  $('gLang').textContent = t.lang;
+  const box = $('lanes'); box.innerHTML = '';
+  G.lanes.forEach(ln => {
+    const el = document.createElement('div');
+    el.className = 'lane'; el.style.setProperty('--c', ln.color); el.id = 'lane' + ln.i;
+    el.innerHTML = `
+      <div class="lane-h"><div class="row"><div class="nm">${esc(teamName(ln.i))}</div><div class="pl"></div></div><div class="bar"><i></i></div></div>
+      <div class="lane-b"></div>
+      <div class="lock"><div class="lt"></div><div class="cd">3</div></div>
+      <div class="flash"></div>`;
+    el.addEventListener('click', e => onLaneClick(ln, e));
+    box.appendChild(el);
+  });
+  layout();
+  G.lanes.forEach(renderLane);
+}
+
+function renderLane(ln) {
+  const t = tr(), el = $('lane' + ln.i), body = el.querySelector('.lane-b');
+  el.querySelector('.pl').textContent = ln.phase === 'done' ? t.finish : `${whoAt(ln, ln.idx)} · ${Math.min(ln.idx + 1, G.total)}/${G.total}`;
+  el.querySelector('.bar i').style.width = (ln.idx / G.total * 100) + '%';
+  el.querySelector('.lock .lt').textContent = t.wrong;
+
+  if (ln.phase === 'done') {
+    const medal = ['🥇', '🥈', '🥉'][ln.place - 1] || '🏁';
+    body.innerHTML = `<div class="center"><div class="medal">${medal}</div><div class="place">${t.place(ln.place)}</div><div class="sub">${fmt(ln.finishMs)}</div></div>`;
+    return;
+  }
+  if (ln.phase === 'pass') {
+    body.innerHTML = `<div class="center"><div class="msg">${t.passMsg}</div><div class="sub">${t.passSub}</div><button class="pass" data-act="next">${esc(t.passBtn(whoAt(ln, ln.idx)))}</button></div>`;
+    return;
+  }
+  const task = ln.tasks[ln.idx], q = task.q;
+  let html = `<div class="tag">${t.types[q.t]}</div><div class="q">${esc(L(q.q))}</div>`;
+  if (q.t === 'tf') {
+    const no = v => task.wrongSet.has(v) ? ' no' : '';
+    html += `<div class="opts"><button class="opt tf-t${no(1)}" data-v="1">✓ ${t.yes}</button><button class="opt tf-f${no(0)}" data-v="0">✗ ${t.no}</button></div>`;
+  } else if (q.t === 'ord') {
+    html += `<div class="opts">` + task.order.map(k => {
+      const pos = k < task.step ? k + 1 : 0;
+      return `<button class="opt${L(q.a[k]).startsWith('git') ? ' cmd' : ''}${pos ? ' done' : ''}" data-k="${k}">${pos ? `<span class="n">${pos}</span>` : ''}${esc(L(q.a[k]))}</button>`;
+    }).join('') + `</div>`;
+  } else {
+    const isCmd = q.t === 'cmd' || q.a.every(a => L(a).startsWith('git'));
+    html += `<div class="opts${isCmd && q.a.some(a => L(a).length > 22) ? ' one' : ''}">` + task.order.map(k =>
+      `<button class="opt${isCmd ? ' cmd' : ''}${task.wrongSet.has(k) ? ' no' : ''}" data-k="${k}">${esc(L(q.a[k]))}</button>`).join('') + `</div>`;
+  }
+  body.innerHTML = html;
+}
+
+function onLaneClick(ln, e) {
+  if (!G.running || G.ended) return;
+  const b = e.target.closest('button'); if (!b) return;
+  if (Date.now() < ln.lockUntil) return;
+  if (b.dataset.act === 'next' && ln.phase === 'pass') { ln.phase = 'task'; renderLane(ln); return; }
+  if (ln.phase !== 'task') return;
+  const task = ln.tasks[ln.idx], q = task.q;
+
+  if (q.t === 'tf') {
+    const v = b.dataset.v === '1';
+    if (v === q.c) return correct(ln, b);
+    task.wrongSet.add(v ? 1 : 0); return wrong(ln);
+  }
+  const k = Number(b.dataset.k);
+  if (q.t === 'ord') {
+    if (k === task.step) {
+      task.step++;
+      if (task.step === q.a.length) return correct(ln, null);
+      beep(true); renderLane(ln); return;
+    }
+    task.step = 0; return wrong(ln);
+  }
+  if (k === q.c) return correct(ln, b);
+  task.wrongSet.add(k); wrong(ln);
+}
+
+function correct(ln, btn) {
+  beep(true);
+  if (btn) btn.classList.add('yes');
+  const el = $('lane' + ln.i), fl = el.querySelector('.flash');
+  fl.textContent = tr().correct; fl.classList.add('on');
+  ln.lockUntil = Date.now() + 700;
+  setTimeout(() => {
+    fl.classList.remove('on');
+    if (!G || G.ended) return;
+    ln.idx++;
+    if (ln.idx >= G.total) {
+      ln.phase = 'done'; ln.finishMs = Date.now() - G.start; ln.place = ++G.finished;
+      if (ln.place === 1) { showBanner(tr().winner(teamName(ln.i))); confetti(); }
+      if (G.finished === G.lanes.length) setTimeout(showResults, 1600);
+    } else if (ln.idx % S.tpp === 0) ln.phase = 'pass';
+    renderLane(ln);
+  }, 700);
+}
+
+function wrong(ln) {
+  beep(false);
+  ln.mistakes++;
+  ln.lockUntil = Date.now() + 3000;
+  const el = $('lane' + ln.i);
+  el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
+  renderLane(ln);
+  el.querySelector('.lock').classList.add('on');
+}
+
+function fmt(ms) { const s = Math.floor(ms / 1000); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+setInterval(() => {
+  if (!G || !G.running || G.ended) return;
+  $('clock').textContent = fmt(Date.now() - G.start);
+  const now = Date.now();
+  G.lanes.forEach(ln => {
+    const lk = $('lane' + ln.i).querySelector('.lock');
+    if (!lk.classList.contains('on')) return;
+    const left = Math.ceil((ln.lockUntil - now) / 1000);
+    if (left <= 0) lk.classList.remove('on'); else lk.querySelector('.cd').textContent = left;
+  });
+}, 150);
+
+function countdown() {
+  const ov = $('countdown'); ov.classList.add('on');
+  $('cdLbl').textContent = tr().ready;
+  $('clock').textContent = '00:00';
+  let n = 3; $('cdNum').textContent = n; beep(true);
+  const iv = setInterval(() => {
+    n--;
+    if (n > 0) { $('cdNum').textContent = n; beep(true); return; }
+    clearInterval(iv);
+    $('cdNum').textContent = '▶'; $('cdLbl').textContent = tr().go;
+    setTimeout(() => { ov.classList.remove('on'); G.start = Date.now(); G.running = true; }, 500);
+  }, 900);
+}
+
+$('gLang').addEventListener('click', () => {
+  S.lang = S.lang === 'kk' ? 'uz' : 'kk'; save();
+  const t = tr();
+  $('gTitle').textContent = t.titlePlain; $('gEnd').textContent = t.end; $('gLang').textContent = t.lang;
+  G.lanes.forEach(ln => { $('lane' + ln.i).querySelector('.nm').textContent = teamName(ln.i); renderLane(ln); });
+});
+$('gFull').addEventListener('click', () => {
+  try { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); } catch (e) {}
+});
+$('gEnd').addEventListener('click', () => { const t = tr(); ask(t.cfTitle, t.cfText, t.cfYes, showResults); });
+
+function showBanner(text) {
+  const b = $('banner'); b.textContent = text; b.classList.add('on');
+  setTimeout(() => b.classList.remove('on'), 4000);
+}
+
+function showResults() {
+  if (!G || G.ended) return;
+  G.ended = true;
+  const t = tr();
+  $('rsTitle').textContent = '🏆 ' + t.results;
+  $('rsHead').innerHTML = t.cols.map(c => `<th>${c}</th>`).join('');
+  const rows = G.lanes.slice().sort((a, b) => (a.place || 99) - (b.place || 99) || b.idx - a.idx || a.mistakes - b.mistakes);
+  $('rsBody').innerHTML = rows.map(ln => {
+    const medal = ln.place ? (['🥇', '🥈', '🥉'][ln.place - 1] || ln.place) : '—';
+    return `<tr><td class="pl">${medal}</td><td><span class="sw" style="background:${ln.color}"></span>${esc(teamName(ln.i))}</td><td>${ln.finishMs != null ? fmt(ln.finishMs) : '—'}</td><td>${ln.mistakes}</td><td>${ln.idx}/${G.total}</td></tr>`;
+  }).join('');
+  $('rsSettings').textContent = t.toSettings; $('rsAgain').textContent = t.again;
+  $('results').classList.add('on');
+  if (G.finished) confetti();
+}
+$('rsAgain').addEventListener('click', () => { $('results').classList.remove('on'); startGame(); });
+$('rsSettings').addEventListener('click', () => {
+  $('results').classList.remove('on'); G = null; show('settings'); renderSettings();
+});
+
+function confetti() {
+  const cv = $('fx'), ctx = cv.getContext('2d');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const ps = Array.from({ length: 220 }, () => ({
+    x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * 0.5,
+    vx: (Math.random() - 0.5) * 4, vy: 3 + Math.random() * 5, r: 6 + Math.random() * 8,
+    a: Math.random() * Math.PI, va: (Math.random() - 0.5) * 0.3, c: COLORS[Math.floor(Math.random() * COLORS.length)]
+  }));
+  const t0 = performance.now();
+  (function frame(now) {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ps.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.a += p.va;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.c;
+      ctx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); ctx.restore();
+    });
+    if (now - t0 < 4500) requestAnimationFrame(frame); else ctx.clearRect(0, 0, cv.width, cv.height);
+  })(t0);
+}
+
+renderSettings();
+</script>
+</body>
+</html>
