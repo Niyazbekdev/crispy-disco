@@ -1,2 +1,7 @@
 men al-xorezmiy barslarinda oqiyman 
 bugin 6-noyabr
+
+
+
+
+bugin local filedagi ozgerislerdi git hubqa juklewdi uyrenip alamiz

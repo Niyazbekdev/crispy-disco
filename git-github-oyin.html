@@ -101,7 +101,8 @@
   .ed .err { color: var(--bad); font-size: 21px; font-weight: 800; min-height: 30px; margin: 10px 0; text-align: center; }
 
   /* ---------- GAME ---------- */
-  #game { flex-direction: column; }
+  /* Doskada barmoq ozgina siljisa ham brauzer "sudrash" deb bosishni bekor qilmasligi uchun */
+  #game { flex-direction: column; touch-action: none; }
   .topbar { flex: none; height: 76px; display: flex; align-items: center; gap: 16px; padding: 0 18px; background: var(--ink); color: #fff; }
   .topbar .t { font-size: 28px; font-weight: 800; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .topbar .clock { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; background: rgba(255,255,255,.12); padding: 4px 18px; border-radius: 14px; }
@@ -849,7 +850,10 @@ function buildLanes() {
       <div class="lane-b"></div>
       <div class="lock"><div class="lt"></div><div class="cd">3</div></div>
       <div class="flash"></div>`;
-    el.addEventListener('click', e => onLaneClick(ln, e));
+    // Javob barmoq/sichqoncha tekkan zahoti qabul qilinadi (click kutilmaydi).
+    // click faqat klaviatura bilan bosilganda (e.detail === 0) ishlatiladi.
+    el.addEventListener('pointerdown', e => { if (e.button === 0) onLaneClick(ln, e); });
+    el.addEventListener('click', e => { if (e.detail === 0) onLaneClick(ln, e); });
     box.appendChild(el);
   });
   layout();
