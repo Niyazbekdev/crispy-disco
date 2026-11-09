@@ -1,7 +1,3 @@
-men al-xorezmiy barslarinda oqiyman 
-bugin 6-noyabr
+gti commit -m " jana ozgeris qosildi"
 
 
-
-
-bugin local filedagi ozgerislerdi git hubqa juklewdi uyrenip alamiz
